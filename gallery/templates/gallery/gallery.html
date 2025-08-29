@@ -1,0 +1,317 @@
+{% extends 'gallery/base.html' %}
+
+{% block title %}Galeria - Fotos e Vídeos{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="bg-gradient-to-r from-primary to-secondary py-16">
+    <div class="container mx-auto px-4 text-center text-primary-content">
+        <h1 class="text-5xl font-bold mb-4">
+            <i class="fas fa-images mr-3"></i>
+            Galeria Completa
+        </h1>
+        <p class="text-xl mb-6">
+            Explore nossa coleção completa de {{ total_items }} itens
+        </p>
+        <div class="stats shadow bg-base-100 text-base-content">
+            <div class="stat">
+                <div class="stat-figure text-primary">
+                    <i class="fas fa-image text-2xl"></i>
+                </div>
+                <div class="stat-title">Total de Itens</div>
+                <div class="stat-value text-primary">{{ total_items }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gallery Carousel Section -->
+{% if media_items %}
+<section class="py-16 bg-base-100">
+    <div class="container mx-auto px-4">
+        <!-- Carousel Controls -->
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-bold">
+                <i class="fas fa-play-circle text-primary mr-2"></i>
+                Carrossel Interativo
+            </h2>
+            <div class="flex gap-2">
+                <button id="prevBtn" class="btn btn-circle btn-primary">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button id="nextBtn" class="btn btn-circle btn-primary">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button id="playPauseBtn" class="btn btn-primary">
+                    <i class="fas fa-play mr-2"></i>
+                    <span id="playPauseText">Reproduzir</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Carousel -->
+        <div class="relative">
+            <div id="carousel" class="carousel w-full h-96 md:h-[500px] lg:h-[600px] rounded-box shadow-2xl overflow-hidden">
+                {% for item in media_items %}
+                <div id="slide{{ forloop.counter }}" class="carousel-item relative w-full">
+                    {% if item.is_image %}
+                        <img src="{{ item.file.url }}" alt="{{ item.title }}" 
+                             class="w-full h-full object-cover">
+                    {% elif item.is_video %}
+                        <video id="video{{ forloop.counter }}" class="w-full h-full object-cover" 
+                               {% if item.thumbnail %}poster="{{ item.thumbnail.url }}"{% endif %} controls>
+                            <source src="{{ item.file.url }}" type="video/mp4">
+                            Seu navegador não suporta o elemento de vídeo.
+                        </video>
+                    {% endif %}
+                    
+                    <!-- Overlay with info -->
+                    <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+                        <div class="text-white">
+                            <h3 class="text-2xl font-bold mb-2">
+                                {% if item.is_image %}
+                                    <i class="fas fa-image mr-2"></i>
+                                {% else %}
+                                    <i class="fas fa-video mr-2"></i>
+                                {% endif %}
+                                {{ item.title }}
+                            </h3>
+                            {% if item.description %}
+                                <p class="text-lg opacity-90">{{ item.description }}</p>
+                            {% endif %}
+                            {% if item.is_featured %}
+                                <div class="badge badge-warning mt-2">
+                                    <i class="fas fa-star mr-1"></i>
+                                    Destaque
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Navigation arrows -->
+                    <div class="absolute flex justify-between transform -translate-y-1/2 left-5 right-5 top-1/2">
+                        <a href="#slide{{ forloop.counter|add:'-1' }}{% if forloop.first %}{{ media_items|length }}{% endif %}" 
+                           class="btn btn-circle btn-primary opacity-70 hover:opacity-100">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a href="#slide{{ forloop.counter|add:'1' }}{% if forloop.last %}1{% endif %}" 
+                           class="btn btn-circle btn-primary opacity-70 hover:opacity-100">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Slide indicators -->
+            <div class="flex justify-center w-full py-2 gap-2 mt-4">
+                {% for item in media_items %}
+                <a href="#slide{{ forloop.counter }}" 
+                   class="btn btn-xs {% if forloop.first %}btn-primary{% else %}btn-outline{% endif %} slide-indicator"
+                   data-slide="{{ forloop.counter }}">
+                    {{ forloop.counter }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Thumbnail Grid -->
+<section class="py-16 bg-base-200">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-center mb-12">
+            <i class="fas fa-th text-primary mr-2"></i>
+            Navegação Rápida
+        </h2>
+        
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {% for item in media_items %}
+            <div class="thumbnail-item cursor-pointer transform transition-all duration-300 hover:scale-105" 
+                 data-slide="{{ forloop.counter }}" onclick="goToSlide({{ forloop.counter }})">
+                <div class="card bg-base-100 shadow-lg hover:shadow-xl">
+                    <figure class="relative h-24 overflow-hidden">
+                        {% if item.is_image %}
+                            <img src="{{ item.file.url }}" alt="{{ item.title }}" 
+                                 class="w-full h-full object-cover">
+                        {% elif item.is_video %}
+                            <img src="{% if item.thumbnail %}{{ item.thumbnail.url }}{% else %}{{ item.file.url }}{% endif %}" alt="{{ item.title }}" 
+                                 class="w-full h-full object-cover">
+                            <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                                <i class="fas fa-play text-white text-sm"></i>
+                            </div>
+                        {% endif %}
+                        {% if item.is_featured %}
+                            <div class="absolute top-1 right-1">
+                                <i class="fas fa-star text-warning text-xs"></i>
+                            </div>
+                        {% endif %}
+                    </figure>
+                    <div class="card-body p-2">
+                        <p class="text-xs font-semibold truncate">{{ item.title }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% else %}
+<!-- Empty State -->
+<section class="py-32 bg-base-100">
+    <div class="container mx-auto px-4 text-center">
+        <div class="max-w-md mx-auto">
+            <i class="fas fa-images text-6xl text-base-300 mb-6"></i>
+            <h2 class="text-3xl font-bold mb-4">Nenhum item encontrado</h2>
+            <p class="text-lg text-base-content/70 mb-8">
+                Ainda não há fotos ou vídeos na galeria. 
+                Adicione alguns itens através do painel administrativo.
+            </p>
+            <a href="/admin/" class="btn btn-primary">
+                <i class="fas fa-plus mr-2"></i>
+                Adicionar Itens
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentSlide = 1;
+let totalSlides = {{ media_items|length }};
+let isPlaying = false;
+let autoPlayInterval;
+
+// Navigation functions
+function goToSlide(slideNumber) {
+    currentSlide = slideNumber;
+    window.location.hash = `slide${slideNumber}`;
+    updateIndicators();
+    pauseAllVideos();
+}
+
+function nextSlide() {
+    currentSlide = currentSlide >= totalSlides ? 1 : currentSlide + 1;
+    goToSlide(currentSlide);
+}
+
+function prevSlide() {
+    currentSlide = currentSlide <= 1 ? totalSlides : currentSlide - 1;
+    goToSlide(currentSlide);
+}
+
+// Auto-play functionality
+function startAutoPlay() {
+    isPlaying = true;
+    document.getElementById('playPauseText').textContent = 'Pausar';
+    document.querySelector('#playPauseBtn i').className = 'fas fa-pause mr-2';
+    
+    autoPlayInterval = setInterval(() => {
+        nextSlide();
+    }, 5000); // Change slide every 5 seconds
+}
+
+function stopAutoPlay() {
+    isPlaying = false;
+    document.getElementById('playPauseText').textContent = 'Reproduzir';
+    document.querySelector('#playPauseBtn i').className = 'fas fa-play mr-2';
+    
+    if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+    }
+}
+
+function toggleAutoPlay() {
+    if (isPlaying) {
+        stopAutoPlay();
+    } else {
+        startAutoPlay();
+    }
+}
+
+// Update slide indicators
+function updateIndicators() {
+    document.querySelectorAll('.slide-indicator').forEach((indicator, index) => {
+        if (index + 1 === currentSlide) {
+            indicator.classList.remove('btn-outline');
+            indicator.classList.add('btn-primary');
+        } else {
+            indicator.classList.remove('btn-primary');
+            indicator.classList.add('btn-outline');
+        }
+    });
+}
+
+// Pause all videos
+function pauseAllVideos() {
+    document.querySelectorAll('video').forEach(video => {
+        video.pause();
+    });
+}
+
+// Event listeners
+document.getElementById('nextBtn').addEventListener('click', nextSlide);
+document.getElementById('prevBtn').addEventListener('click', prevSlide);
+document.getElementById('playPauseBtn').addEventListener('click', toggleAutoPlay);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+    switch(e.key) {
+        case 'ArrowLeft':
+            prevSlide();
+            break;
+        case 'ArrowRight':
+            nextSlide();
+            break;
+        case ' ': // Spacebar
+            e.preventDefault();
+            toggleAutoPlay();
+            break;
+        case 'Escape':
+            stopAutoPlay();
+            break;
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    // Get current slide from URL hash
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#slide')) {
+        const slideNum = parseInt(hash.replace('#slide', ''));
+        if (slideNum >= 1 && slideNum <= totalSlides) {
+            currentSlide = slideNum;
+        }
+    }
+    updateIndicators();
+    
+    // Auto-pause videos when they're not visible
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target.querySelector('video');
+            if (video && !entry.isIntersecting) {
+                video.pause();
+            }
+        });
+    });
+    
+    document.querySelectorAll('.carousel-item').forEach(item => {
+        observer.observe(item);
+    });
+});
+
+// Handle hash changes
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#slide')) {
+        const slideNum = parseInt(hash.replace('#slide', ''));
+        if (slideNum >= 1 && slideNum <= totalSlides) {
+            currentSlide = slideNum;
+            updateIndicators();
+        }
+    }
+});
+</script>
+{% endblock %}

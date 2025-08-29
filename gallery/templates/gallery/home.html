@@ -1,0 +1,188 @@
+{% extends 'gallery/base.html' %}
+
+{% block title %}Início - Galeria de Fotos e Vídeos{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero min-h-96 bg-gradient-to-r from-primary to-secondary">
+    <div class="hero-content text-center text-primary-content">
+        <div class="max-w-md">
+            <h1 class="mb-5 text-5xl font-bold">
+                <i class="fas fa-camera mr-3"></i>
+                Galeria
+            </h1>
+            <p class="mb-5 text-lg">
+                Explore nossa coleção de fotos e vídeos incríveis. 
+                Desfrute de uma experiência visual única com nosso carrossel interativo.
+            </p>
+            <a href="{% url 'gallery:gallery' %}" class="btn btn-accent btn-lg">
+                <i class="fas fa-images mr-2"></i>
+                Ver Galeria
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Items Section -->
+{% if featured_items %}
+<section class="py-16 bg-base-100">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold mb-4">
+                <i class="fas fa-star text-warning mr-3"></i>
+                Destaques
+            </h2>
+            <p class="text-lg text-base-content/70">
+                Confira nossos itens em destaque
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for item in featured_items %}
+            <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+                <figure class="relative overflow-hidden h-64">
+                    {% if item.is_image %}
+                        <img src="{{ item.file.url }}" alt="{{ item.title }}" 
+                             class="w-full h-full object-cover transition-transform duration-300 hover:scale-110">
+                    {% elif item.is_video %}
+                        <video class="w-full h-full object-cover"{% if item.thumbnail %} poster="{{ item.thumbnail.url }}"{% endif %}>
+                            <source src="{{ item.file.url }}" type="video/mp4">
+                        </video>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <i class="fas fa-play text-white text-4xl"></i>
+                        </div>
+                    {% endif %}
+                    <div class="absolute top-2 right-2">
+                        <div class="badge badge-warning">
+                            <i class="fas fa-star mr-1"></i>
+                            Destaque
+                        </div>
+                    </div>
+                </figure>
+                <div class="card-body">
+                    <h3 class="card-title">
+                        {% if item.is_image %}
+                            <i class="fas fa-image text-info mr-2"></i>
+                        {% else %}
+                            <i class="fas fa-video text-error mr-2"></i>
+                        {% endif %}
+                        {{ item.title }}
+                    </h3>
+                    {% if item.description %}
+                        <p class="text-base-content/70">{{ item.description|truncatewords:15 }}</p>
+                    {% endif %}
+                    <div class="card-actions justify-end mt-4">
+                        <button class="btn btn-primary btn-sm" onclick="openModal('{{ item.id }}', '{{ item.file.url }}', '{{ item.title|escapejs }}', '{{ item.description|escapejs }}', '{{ item.media_type }}')">
+                            <i class="fas fa-eye mr-1"></i>
+                            Ver
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Recent Items Section -->
+{% if recent_items %}
+<section class="py-16 bg-base-200">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold mb-4">
+                <i class="fas fa-clock text-info mr-3"></i>
+                Recentes
+            </h2>
+            <p class="text-lg text-base-content/70">
+                Os itens mais recentemente adicionados
+            </p>
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {% for item in recent_items %}
+            <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300">
+                <figure class="relative overflow-hidden h-48">
+                    {% if item.is_image %}
+                        <img src="{{ item.file.url }}" alt="{{ item.title }}" 
+                             class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                    {% elif item.is_video %}
+                        <video class="w-full h-full object-cover"{% if item.thumbnail %} poster="{{ item.thumbnail.url }}"{% endif %}>
+                            <source src="{{ item.file.url }}" type="video/mp4">
+                        </video>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/30">
+                            <i class="fas fa-play text-white text-2xl"></i>
+                        </div>
+                    {% endif %}
+                </figure>
+                <div class="card-body p-4">
+                    <h4 class="card-title text-sm">
+                        {% if item.is_image %}
+                            <i class="fas fa-image text-info mr-1"></i>
+                        {% else %}
+                            <i class="fas fa-video text-error mr-1"></i>
+                        {% endif %}
+                        {{ item.title|truncatechars:20 }}
+                    </h4>
+                    <div class="card-actions justify-end">
+                        <button class="btn btn-primary btn-xs" onclick="openModal('{{ item.id }}', '{{ item.file.url }}', '{{ item.title|escapejs }}', '{{ item.description|escapejs }}', '{{ item.media_type }}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-8">
+            <a href="{% url 'gallery:gallery' %}" class="btn btn-primary btn-lg">
+                <i class="fas fa-images mr-2"></i>
+                Ver Todos os Itens
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Modal for viewing media -->
+<dialog id="media_modal" class="modal">
+    <div class="modal-box w-11/12 max-w-5xl">
+        <form method="dialog">
+            <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+        </form>
+        <h3 id="modal_title" class="font-bold text-lg mb-4"></h3>
+        <div id="modal_content" class="mb-4"></div>
+        <p id="modal_description" class="text-base-content/70"></p>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openModal(id, fileUrl, title, description, mediaType) {
+    const modal = document.getElementById('media_modal');
+    const modalTitle = document.getElementById('modal_title');
+    const modalContent = document.getElementById('modal_content');
+    const modalDescription = document.getElementById('modal_description');
+    
+    modalTitle.textContent = title;
+    modalDescription.textContent = description;
+    
+    if (mediaType === 'image') {
+        modalContent.innerHTML = `<img src="${fileUrl}" alt="${title}" class="w-full h-auto rounded-lg">`;
+    } else if (mediaType === 'video') {
+        modalContent.innerHTML = `
+            <video controls class="w-full h-auto rounded-lg">
+                <source src="${fileUrl}" type="video/mp4">
+                Seu navegador não suporta o elemento de vídeo.
+            </video>
+        `;
+    }
+    
+    modal.showModal();
+}
+</script>
+{% endblock %}
