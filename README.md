@@ -43,6 +43,7 @@ source .venv/bin/activate
 ### 3. Instale as dependências Python
 ```bash
 pip install -r requirements.txt
+
 ```
 
 ### 4. Configure o banco de dados
