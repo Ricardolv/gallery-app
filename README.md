@@ -10,7 +10,7 @@ Uma aplicação web moderna para gerenciar e exibir fotos e vídeos com interfac
 - ✅ Reprodução de vídeo com controles
 - ✅ Sistema de thumbnails automático
 - ✅ Painel administrativo Django
-- ✅ API REST para integração
+- ✅ Endpoint de API para consulta de dados
 - ✅ Suporte a múltiplos formatos (JPG, PNG, GIF, MP4, AVI, MOV, WEBM)
 
 ## 📋 Pré-requisitos
@@ -27,6 +27,8 @@ git clone <url-do-repositorio>
 cd gallery-app
 ```
 
+> **Nota**: Este projeto inclui um arquivo `requirements.txt` com todas as dependências necessárias.
+
 ### 2. Crie e ative o ambiente virtual
 ```bash
 python -m venv .venv
@@ -40,9 +42,7 @@ source .venv/bin/activate
 
 ### 3. Instale as dependências Python
 ```bash
-pip install django
-pip install django-tailwind[reload]
-pip install pillow
+pip install -r requirements.txt
 ```
 
 ### 4. Configure o banco de dados
@@ -117,10 +117,26 @@ gallery-app/
 4. Preencha os campos e faça upload do arquivo
 5. Marque "Destaque" se quiser que apareça na seção em destaque
 
-### API REST
-A aplicação inclui endpoints de API:
-- `GET /api/media/` - Lista todos os itens de mídia
-- `GET /api/media/{id}/` - Detalhes de um item específico
+### API
+A aplicação inclui um endpoint de API:
+- `GET /api/media/` - Lista todos os itens de mídia em formato JSON
+
+Exemplo de resposta:
+```json
+{
+  "media_items": [
+    {
+      "id": 1,
+      "title": "Título do item",
+      "description": "Descrição",
+      "media_type": "image",
+      "file_url": "/media/gallery/2025/08/29/arquivo.jpg",
+      "thumbnail_url": "/media/gallery/thumbnails/2025/08/29/thumb.jpg",
+      "is_featured": true
+    }
+  ]
+}
+```
 
 ## 🎨 Personalização
 
